@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <http:listener-config name="sql-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="sql-config" api="sql.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <db:config name="Database_Config" doc:name="Database Config" doc:id="3ad2d1fb-6b44-48af-a17e-e75e3e45f25c" >
+		<db:my-sql-connection host="sql12.freesqldatabase.com" port="3306" user="sql12665353" password="FurwR1tLgM" database="sql12665353" />
+	</db:config>
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="8397e8f9-8be1-4775-810e-f96ac936a01d" >
+		<db:my-sql-connection host="sql12.freesqldatabase.com" port="3306" user="sql12665353" password="FurwR1tLgM" database="sql12665353" />
+	</db:config>
+	<db:config name="Database_Config2" doc:name="Database Config" doc:id="89328c82-e8db-46b6-87a1-d3192b83deaa" >
+		<db:my-sql-connection host="sql12.freesqldatabase.com" port="3306" user="sql12665353" password="FurwR1tLgM" database="sql12665353" />
+	</db:config>
+	<db:config name="Database_Config3" doc:name="Database Config" doc:id="d12b9c99-00d2-440e-864f-f221d608983d" >
+		<db:my-sql-connection host="sql12.freesqldatabase.com" port="3306" user="sql12665353" password="FurwR1tLgM" database="sql12665353" />
+	</db:config>
+	<flow name="sql-main">
+        <http:listener config-ref="sql-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="sql-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="sql-console">
+        <http:listener config-ref="sql-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="sql-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="delete:\remove:application\json:sql-config">
+        <logger level="INFO" message="delete:\remove:application\json:sql-config" />
+		<db:delete doc:name="Delete" doc:id="c825f32a-c348-4f42-96b5-c5018205f592" config-ref="Database_Config3">
+			<db:sql ><![CDATA[delete from employes where Empid :
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"Empid" :payload.Empid
+}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="9b7a4e04-6130-436e-aaba-5063ec3cf893" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="8706a9bb-2d5e-4935-8c44-2200f352f7f3" />
+    </flow>
+    <flow name="get:\getexp:application\json:sql-config">
+        <logger level="INFO" message="get:\getexp:application\json:sql-config" />
+		<db:select doc:name="Select" doc:id="22d6ca47-1d44-4d77-aa71-523ec8421c9e" config-ref="Database_Config2">
+			<db:sql ><![CDATA[select Empname from employes where Empid=:a
+
+
+
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"a":payload.Empid
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="412c9370-f16c-41ce-96c6-ca95b7d0ac5c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="115d403f-8d2a-405a-ae87-67085d8b43a8" message="#[payload]"/>
+    </flow>
+    <flow name="post:\create:application\json:sql-config">
+        <logger level="INFO" message="post:\create:application\json:sql-config" />
+		<db:insert doc:name="Insert" doc:id="e00d6a6c-dac9-4066-bcd1-7a67bc6d3a89" config-ref="Database_Config">
+			<db:sql ><![CDATA[INSERT INTO `Studentdetailes` (`Studentname`, `Studentrollno`, `Studentgroup`) VALUES ('Mahesh', '204', 'B.com');]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'Stdn' : payload.Stdname,
+	 'StrN' : payload.stdrollNo,
+	 'Stdg' : payload.stdgroup
+}]]]></db:input-parameters>
+		</db:insert>
+		<logger level="INFO" doc:name="Logger" doc:id="08f0a5d4-fe3a-47a7-af77-97c0b6b67771" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="224baae9-3717-4e8c-af9e-b8ab8ad42342" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+    <flow name="post:\update:application\json:sql-config">
+        <logger level="INFO" message="post:\update:application\json:sql-config" />
+		<db:update doc:name="Update" doc:id="b3540a2f-34c9-42d6-bcbc-a77e333a7edf" config-ref="Database_Config1">
+			<db:sql ><![CDATA[UPDATE Studentdetailes
+SET Studentname = 'uma', Studentrollno = '207', Studentgroup = 'B.s.c';
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'STDN' : payload.Studentname,
+	 'STDRN' : payload.Studentrollno,
+	 'STG' : payload.Studentgroup
+}]]]></db:input-parameters>
+		</db:update>
+		<logger level="INFO" doc:name="Logger" doc:id="c8cfbd56-e1d9-4b3f-ac73-c19bcadb9150" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="48736dde-b592-4fd8-9a2c-b42b6be7d597" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+</mule>
